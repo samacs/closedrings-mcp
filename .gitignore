@@ -33,3 +33,6 @@ coverage/
 
 # Local tooling
 .history/
+
+.DS_Store
+
