@@ -1,80 +1,99 @@
 # closedrings-mcp
 
-**The one-step setup tool for connecting any MCP-capable AI agent to
-[Closed Rings](https://closedrings.sh) — the CLI-first time tracker.**
+**Marketplace artifacts for connecting MCP-capable AI agents to
+[Closed Rings](https://closedrings.sh).**
 
-```sh
-npx closedrings-mcp connect
-```
+There's no software in this repo — the MCP server is hosted on
+the main app at `api.closedrings.sh/mcp`. What lives here is the
+plumbing for one-click discovery + one-click connect across the
+agent ecosystem:
 
-Detects your installed MCP clients (Claude Desktop, Claude Code,
-Cursor), walks you through a device-authorization flow against
-`closedrings.sh`, and writes the right config file for each client.
-Same psychological shape as `rings login` — no JSON editing, no
-token paste, no "which file goes where."
+- **The skill** — `skill/SKILL.md`, the `closedrings:track-time`
+  playbook agents read to know *when* to call which tool.
+- **Marketplace manifests** — listings for Claude Desktop's
+  connector directory, Claude Code's plugin install path, the
+  Cursor MCP marketplace.
+- **Branding assets** — logo + screenshots used in each listing.
+
+When you finish a "connect Closed Rings" flow in any of those
+clients, the auth handshake is **the MCP-spec OAuth 2.0 flow** —
+the client opens a browser to `closedrings.sh/oauth/authorize`,
+you sign in (if not already), see a consent screen, and click
+Approve. No token paste, no JSON editing.
 
 ---
 
 ## Status
 
-🚧 **Pre-release.** Scaffold only. v0.1 ships when:
-
-- The CLI tool can mint an agent token via device flow against the
-  main app (depends on `?scope=agent` support on `/v1/auth/device/code`
-  in the main repo — coordinated change).
-- Auto-detection + config writers exist for at least Claude Desktop,
-  Claude Code, and Cursor.
-
-Until v0.1 is published, follow the manual setup at
+🚧 **Pre-release.** The marketplace artifacts here are gated on
+the server-side OAuth implementation landing in the main repo
+(tracked as Phase F of the MCP integration epic). Until then,
+follow the manual setup at
 [closedrings.sh/docs/mcp/overview](https://closedrings.sh/docs/mcp/overview).
 
-## What this is (and isn't)
+## What this is *not*
 
-**This is a config tool.** It mints a `kind: agent` token against
-`closedrings.sh` and writes the right MCP-server entry into each
-client's config file. After that, every tool call goes directly
-from the client to `https://api.closedrings.sh/mcp` — `closedrings-mcp`
-is no longer in the loop.
+A common misconception worth flagging up front, because I had it
+myself when I started this repo:
 
-**This is *not* a local MCP server.** Closed Rings hosts the MCP
-transport at `api.closedrings.sh/mcp` (Streamable HTTP, JSON-RPC 2.0).
-There's no stdio process to keep alive, no proxy to maintain.
+- **Not an npm package.** There's no `npx closedrings-mcp connect`
+  CLI tool. Auth lives in the MCP protocol now (since the 2025-03-26
+  revision) — clients handle the OAuth dance natively.
+- **Not a local MCP server.** The remote MCP transport at
+  `api.closedrings.sh/mcp` is the only Closed Rings MCP server.
+- **Not a token-paste setup helper.** Once the OAuth path is live
+  on the main app, paste-token flows go away.
+
+This repo is the *discovery layer* — the bit that puts Closed
+Rings into the marketplaces users browse, with the right
+manifests, descriptions, and branding for each.
+
+## Architecture in one diagram
 
 ```
-┌───────────────┐  device flow  ┌────────────────────────┐
-│ closedrings   │ ───────────▶  │ closedrings.sh         │
-│ -mcp (npx)    │ ◀───── token  │ /v1/auth/device/code   │
-└──────┬────────┘               └────────────────────────┘
-       │ writes config
-       ▼
-┌───────────────────────────────────┐
-│ ~/Library/.../claude_desktop_     │ ─── bearer auth ───▶  api.closedrings.sh/mcp
-│ config.json  /  .mcp.json  /  …   │
-└───────────────────────────────────┘
+Claude Desktop / Claude Code / Cursor
+        │
+        │   1. user adds the connector by URL
+        │   2. unauthenticated request gets 401 with
+        │      WWW-Authenticate pointing at the
+        │      /.well-known/oauth-protected-resource endpoint
+        ▼
+   closedrings.sh
+   ├── /.well-known/oauth-protected-resource    ──┐
+   ├── /.well-known/oauth-authorization-server    │
+   ├── /oauth/register     (Dynamic Client Reg.)  │  ← server-side
+   ├── /oauth/authorize    (consent UI)           │   work in the
+   ├── /oauth/token        (PKCE)                 │   main repo
+   └── /api/mcp            (existing transport;   ──┘
+                           accepts the token
+                           OAuth minted)
 ```
+
+The token OAuth mints is a `kind: agent` `ApiToken` — the same
+shape we already have for the manual `/profile/agents` flow. The
+MCP transport's auth code path doesn't change; only the
+provisioning path does.
+
+For the full server-side spec, see
+[`docs/architecture.md`](docs/architecture.md).
 
 ## Companion skill
 
-Ships the `closedrings:track-time` playbook at
-[`skill/SKILL.md`](skill/SKILL.md). Capable clients install it
-alongside the MCP server entry so the agent knows when to call
-which tool. The same content sits on the server's `initialize`
-handshake — this file is the persistent, client-side copy.
+`skill/SKILL.md` ships the `closedrings:track-time` playbook —
+trigger phrases, project detection, confirm-writes rule,
+retroactive vs live, end-of-day formatting, recipes. Stays in
+sync with the server's `Mcp::Playbook::TEXT` (which is what gets
+sent via `serverInfo.instructions` on the MCP `initialize`
+handshake).
 
-## Development
+If your client supports persistent rules / custom instructions /
+plugin-installed skills, point it at this file's URL:
 
-```sh
-git clone https://github.com/samacs/closedrings-mcp
-cd closedrings-mcp
-# Tooling TBD — see docs/architecture.md for the v0.1 plan
 ```
-
-For local dev against your own running Rails server, point at
-`https://api.lvh.me:3000/mcp` with a `cr_test_*` token. See the
-[main app's setup docs](https://closedrings.sh/docs/mcp/claude-desktop)
-for the URL/header shape.
+https://raw.githubusercontent.com/samacs/closedrings-mcp/main/skill/SKILL.md
+```
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Open so anyone connecting an agent
-can audit what the install code does with their token.
+MIT — see [LICENSE](LICENSE). The manifests and skill are open
+so any marketplace reviewer can audit them.

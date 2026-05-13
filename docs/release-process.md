@@ -1,87 +1,73 @@
 # Release process
 
+This repo doesn't publish to npm. Releases here are
+**marketplace submissions** + tagged versions of the skill and
+manifests, so a given Closed Rings server can be paired with a
+known-good set of artifacts.
+
 ## Versioning
 
-Semantic Versioning, with one project-specific clarification on
-what counts as a breaking change:
+Semantic Versioning, interpreted for an artifacts-only repo:
 
-- **Patch (0.1.x → 0.1.y)** — bug fixes, copy tweaks, internal
-  refactors. No server requirement change. Safe to publish without
-  coordination.
-- **Minor (0.x.0 → 0.y.0)** — new client supported, new commands,
-  additive config keys. May bump the minimum server version — if
-  it does, that's called out at the top of the release notes and
-  reflected in the compatibility table in `CHANGELOG.md`.
-- **Major (x.0.0 → y.0.0)** — breaking changes to command surface
-  (`connect` semantics change in a non-additive way), required Node
-  version bump, or required server version bump that's
-  incompatible with versions still in the wild. Rare; needs a
-  written migration note.
+- **Patch (0.1.x)** — copy tweaks in the skill, fixes to a
+  manifest, branding refresh. No marketplace re-submission
+  required if the change is below their review threshold.
+- **Minor (0.x.0)** — new marketplace supported, new skill
+  capability, additive manifest fields. May require re-submission
+  to one or more marketplaces.
+- **Major (x.0.0)** — breaking changes that require all listings
+  to be updated in lockstep (e.g. a server URL change, an OAuth
+  scope rename). Rare.
+
+The version is also the version users see in the marketplace
+listings, so bumps should be deliberate.
 
 ## Cutting a release
 
-1. Land all the work for the release on `main` (PRs against `main`
-   reviewed and merged).
-2. Update `CHANGELOG.md` — move the `[Unreleased]` section to the
-   new version's heading, date it, refresh the compatibility row.
-3. Update `package.json#version` to match.
-4. Commit: `chore(release): vX.Y.Z`.
-5. Tag: `git tag -a vX.Y.Z -m "vX.Y.Z" && git push --tags`.
-6. GitHub Action picks up the tag, runs tests + lint, publishes to
-   npm if everything's green. (CI workflow lives in
-   `.github/workflows/release.yml` — to be added in the first dev
-   session.)
-7. GitHub Release auto-drafts from the tag; paste the relevant
-   CHANGELOG section into the body, attach any precompiled
-   artifacts.
-8. Bump the docs in the main app at
-   [closedrings.sh/docs/mcp/overview](https://closedrings.sh/docs/mcp/overview)
-   to mention the new version if anything user-visible changed.
+1. Land all the work on `main` via PRs.
+2. Update `CHANGELOG.md` — move `[Unreleased]` to the new version,
+   date it, note any marketplace re-submission needed.
+3. Tag: `git tag -a vX.Y.Z -m "vX.Y.Z" && git push --tags`.
+4. GitHub Release auto-drafts from the tag; paste the relevant
+   CHANGELOG section into the body.
+5. If any marketplace needs re-submission, file each one and
+   track the review state in the GitHub Release notes (link to
+   each marketplace's submission page).
 
 ## Compatibility with the main app
 
-The main Rails app at `closedrings.sh` is the server side. The
-plugin announces its **minimum supported server version** at the top
-of `CHANGELOG.md` and in `package.json#engines.closedrings` (custom
-field, read by `closedrings-mcp doctor`).
+Each release announces the **minimum supported main-app version**
+at the top of `CHANGELOG.md`. That version is what the
+marketplace listings claim. If the main app's MCP server URL,
+OAuth metadata shape, or supported tool surface changes in a way
+that breaks a previously-shipped manifest, the next release here
+needs to bump the minimum.
 
-A release that requires a server-side change (e.g. a new tool, a
-new auth shape, a different device-flow scope) goes through a
-coordinated rollout:
-
-1. The server change lands and ships to `closedrings.sh` first.
-2. The server version on `serverInfo` in the MCP handshake reflects
-   the new capability.
-3. The plugin release goes out **after** the server is live in
-   production. Otherwise users would download a plugin that demands
-   features the server doesn't have yet.
-
-Server versions are tracked separately (they roll with the main
-app's deploy cadence). The plugin doesn't need to pin a max server
-version — it needs to be tolerant of newer servers, which the MCP
-protocol's capability negotiation handles.
+A common case to watch for: the OAuth metadata may change between
+spec revisions. If `closedrings.sh` adopts a newer MCP spec
+revision, any manifests that hard-code old paths need updates.
 
 ## What goes in a release announcement
 
-- One-line summary at the top
-- New features (one bullet each)
-- Fixes
-- Compatibility note if the minimum server version bumped
-- Migration steps for users on the prior version (usually: none;
-  re-run `closedrings-mcp connect`)
-
-Keep it terse. Users skim release notes; the changelog is the
-reference for the curious.
+- One-line summary
+- Which marketplaces are affected (with submission links)
+- Skill changes (bullet each behavioural rule that moved)
+- Compatibility: minimum main-app version + the MCP protocol
+  version it targets
+- Migration steps for existing users (usually: none — the agent
+  picks up the new skill on its next handshake)
 
 ## Yanking a release
 
-If a release ships with a critical bug:
+If a manifest has a critical bug (e.g. a wrong URL in a connector
+listing):
 
-1. `npm deprecate closedrings-mcp@X.Y.Z "<reason — point to issue>"`
-2. Cut a patch release with the fix.
-3. Mark the broken version in `CHANGELOG.md` under a
-   `### Yanked` heading inside that version's section.
+1. Delist the affected manifest from the marketplace (each has
+   its own process — varies from "edit the listing" to "open a
+   support ticket").
+2. Tag a patch release with the fix.
+3. Re-submit to the marketplace.
+4. Mark the broken version under a `### Yanked` heading inside
+   that version's section of `CHANGELOG.md`.
 
-Don't unpublish — npm policy is to prefer deprecate over unpublish
-unless the version has security implications or was published in
-error within 72 hours.
+Don't delete the tag — leave the audit trail intact.
