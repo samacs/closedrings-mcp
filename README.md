@@ -28,8 +28,15 @@ Approve. No token paste, no JSON editing.
 🚧 **Pre-release** — server-side OAuth has landed
 ([PR #98](https://github.com/samacs/closedrings.sh/pull/98));
 remaining gates for v0.1.0 are the production deploy and the
-Claude Desktop screenshot captures. Until then, follow the manual
-setup at
+Claude Desktop screenshot captures. Manifests are ready to ship:
+
+| Marketplace | Status | Submit when |
+|---|---|---|
+| **Claude Code** (this repo's root `.claude-plugin/marketplace.json`) | Marketplace live, install verified | Production has the OAuth endpoints |
+| **Claude Desktop** ([`manifests/claude-desktop/`](manifests/claude-desktop/)) | Manifest, cover letter, icons committed; screenshots + wordmark pending | Production has the OAuth endpoints + assets are captured |
+| Cursor       | Not started | After Claude Desktop is in review |
+
+Until production deploys, follow the manual setup at
 [closedrings.sh/docs/mcp/overview](https://closedrings.sh/docs/mcp/overview).
 
 ## Install in Claude Code
