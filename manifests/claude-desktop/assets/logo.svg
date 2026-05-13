@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  closedrings.sh brand mark
+  Two concentric rings, both fully closed.
+
+  Theming:
+    - .cr-ring-outer  → currentColor (inherits surrounding text colour)
+    - .cr-ring-inner  → var(--accent), with a prefers-color-scheme fallback
+                        so favicon use adapts to the OS theme.
+
+  Use as inline SVG via the `brand_mark` helper for the animated draw-in,
+  or as <img>/<link rel="icon"> for static contexts.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="closedrings.sh">
+  <style>
+    .cr-ring-outer { stroke: currentColor; }
+    .cr-ring-inner { stroke: #2563EB; }
+    @media (prefers-color-scheme: dark) {
+      .cr-ring-inner { stroke: #5B8DEF; }
+    }
+  </style>
+  <g fill="none" stroke-width="70" stroke-linecap="round" stroke-linejoin="round">
+    <circle class="cr-ring-outer" cx="512" cy="512" r="384"/>
+    <circle class="cr-ring-inner" cx="512" cy="512" r="213.333"/>
+  </g>
+</svg>

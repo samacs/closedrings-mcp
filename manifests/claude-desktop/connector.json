@@ -1,0 +1,133 @@
+{
+  "$comment": "Single source of truth for the Closed Rings → Anthropic Connector Directory submission. Anthropic's submission process is a Google Form (https://docs.google.com/forms/d/e/1FAIpQLSeafJF2NDI7oYx1r8o0ycivCSVLNq92Mpc1FPxMKSw1CzDkqA/viewform) — there's no public JSON schema you upload. This file packages everything the form asks for in one place so the maintainer pastes from one document. Update this file rather than the form when something changes; resubmit when material.",
+
+  "schema_version": "1.0.0",
+  "last_reviewed": "2026-05-13",
+
+  "identity": {
+    "name": "Closed Rings",
+    "tagline": "Track time without leaving your terminal — let your AI agent close the ring.",
+    "short_description": "Connect Claude to Closed Rings so the agent can read what you're working on, start and stop time blocks, log past work, and answer end-of-day questions — all without context-switching out of chat.",
+    "long_description": "Closed Rings is a CLI-first time tracker built around the Apple Activity Rings metaphor: every day you have a ring to close. Most time trackers ask you to context-switch *to* them, which is the opposite of what tracked time should encourage. The MCP integration makes Claude a first-class client: while you're already in a chat with Claude — pairing on a feature, debugging, writing copy — the agent can read your project list, start a live block, log past work retroactively, and answer 'what did I do today?' from real data rather than chat-window memory.\n\nEvery write goes through the same domain layer the dashboard and CLI use, with model-level overlap validation, an audit trail, and a per-token last-seen-client label so you always know which agent did what. Tokens are revocable from the dashboard; a weekly digest emails you what your connected agents did all week.",
+    "category": "productivity",
+    "subcategory": "time-tracking",
+    "tags": [ "time-tracking", "productivity", "developer-tools", "cli", "agent-native" ],
+    "homepage_url": "https://closedrings.sh",
+    "documentation_url": "https://closedrings.sh/docs/mcp",
+    "support_url": "https://closedrings.sh/contact",
+    "privacy_policy_url": "https://closedrings.sh/privacy",
+    "terms_of_service_url": "https://closedrings.sh/terms",
+    "source_repository": "https://github.com/samacs/closedrings-mcp"
+  },
+
+  "branding": {
+    "$comment": "Files under assets/ are referenced relative to this manifest. Anthropic's form upload likely accepts PNG + SVG. The 1024×1024 master is what you upload; the others are pre-rendered downscales kept here for parity with the dashboard's existing brand pack.",
+    "logo_master_svg": "assets/logo.svg",
+    "icon_1024": "assets/icon-1024.png",
+    "icon_512":  "assets/icon-512.png",
+    "icon_256":  "assets/icon-256.png",
+    "icon_128":  "assets/icon-128.png",
+    "wordmark":  "assets/wordmark.svg",
+    "screenshots": [
+      { "src": "assets/screenshots/01-dashboard.png",     "caption": "Dashboard view of the day's rings" },
+      { "src": "assets/screenshots/02-claude-connect.png", "caption": "Claude Desktop OAuth consent screen" },
+      { "src": "assets/screenshots/03-claude-log.png",     "caption": "Claude logs a retroactive time block" },
+      { "src": "assets/screenshots/04-audit-log.png",      "caption": "Audit log shows the agent action with token + client labels" }
+    ],
+    "primary_color": "#0F172A",
+    "accent_color":  "#F0B100"
+  },
+
+  "publisher": {
+    "name":           "Closed Rings",
+    "company_name":   "Closed Rings",
+    "contact_name":   "Saul Martinez",
+    "contact_email":  "saul@closedrings.sh",
+    "contact_role":   "Maintainer",
+    "country":        "United States",
+    "verified_domain": "closedrings.sh"
+  },
+
+  "server": {
+    "url":                "https://api.closedrings.sh/mcp",
+    "transport":          "streamable_http",
+    "protocol_version":   "2025-06-18",
+    "supports_resources": true,
+    "supports_tools":     true,
+    "supports_prompts":   false,
+    "supports_subscriptions": false
+  },
+
+  "auth": {
+    "$comment": "MCP-spec OAuth 2.1 + PKCE + DCR + RFC 8707 resource indicators. All flows are discoverable from the protected-resource metadata document; the review team should not need any out-of-band credentials.",
+    "type": "oauth_2_1",
+    "discovery": {
+      "protected_resource_metadata":   "https://api.closedrings.sh/.well-known/oauth-protected-resource",
+      "authorization_server_metadata": "https://closedrings.sh/.well-known/oauth-authorization-server"
+    },
+    "endpoints": {
+      "registration":  "https://closedrings.sh/oauth/register",
+      "authorization": "https://closedrings.sh/oauth/authorize",
+      "token":         "https://closedrings.sh/oauth/token"
+    },
+    "supports": {
+      "dynamic_client_registration": true,
+      "pkce_methods":                [ "S256" ],
+      "grant_types":                 [ "authorization_code" ],
+      "token_endpoint_auth_methods": [ "none" ],
+      "rfc_8707_resource_indicators": true
+    },
+    "redirect_uri_policy": "Accepts HTTPS, loopback HTTP (localhost / 127.0.0.1 / [::1]), and custom desktop schemes. Exact-string match against pre-registered values per OAuth 2.1 §1.4.4.",
+    "test_account": {
+      "$comment": "We recommend the reviewer registers their own account at https://closedrings.sh and exercises the consent flow against it. If you'd prefer a sandbox, email saul@closedrings.sh and we'll provision a test tenant with seed data.",
+      "self_serve_signup_url": "https://closedrings.sh/sign-up",
+      "free_trial_available":  true
+    }
+  },
+
+  "scopes": [
+    {
+      "name": "mcp",
+      "display_name": "Time tracking",
+      "description": "Read and write time blocks, projects, and tasks on your behalf. Includes: list projects and tasks, see what's currently tracking, start/stop the live timer, log retroactive blocks, edit and delete past blocks, and generate standup-style summaries.",
+      "data_categories": [ "time tracking entries", "project metadata", "task metadata", "audit log entries" ],
+      "is_default": true
+    }
+  ],
+
+  "tools": [
+    { "name": "current_context",       "kind": "read",  "description": "Returns the running time block (if any) plus its project and task." },
+    { "name": "list_projects",         "kind": "read",  "description": "Lists the user's projects with open-task counts." },
+    { "name": "list_tasks",            "kind": "read",  "description": "Lists tasks under a project, optionally filtered by open/closed." },
+    { "name": "recent_time_blocks",    "kind": "read",  "description": "Returns the user's most recent completed time blocks, newest first." },
+    { "name": "today_snapshot",        "kind": "read",  "description": "Structured day summary with the user-typed messages from each block." },
+    { "name": "start_time_block",      "kind": "write", "description": "Starts a live time block on a project + optional task. Auto-stops any running block." },
+    { "name": "stop_time_block",       "kind": "write", "description": "Stops the running block, optionally replacing the message." },
+    { "name": "log_time_block",        "kind": "write", "description": "Creates a back-dated time block (started_at + ended_at). Rejected if it overlaps an existing block." },
+    { "name": "update_time_block",     "kind": "write", "description": "Edits a past block's timestamps, message, or task assignment." },
+    { "name": "delete_time_block",     "kind": "write", "description": "Permanently deletes a time block. Audit-logged." }
+  ],
+
+  "resources": [
+    { "uri": "closedrings://current",  "description": "The currently-running time block, if any. Subscribable in clients that support resource subscriptions." },
+    { "uri": "closedrings://projects", "description": "The user's project list, refreshed on change." }
+  ],
+
+  "security": {
+    "tls":                          "TLS 1.2+ via Cloudflare in front of Heroku.",
+    "audit_log":                    "Every write tool call is recorded with the user, the token id, the connecting client name, and the resulting record id. Surfaced at /admin/audit and /profile/agents.",
+    "token_audience_binding":       "OAuth-minted tokens carry the canonical MCP server URI (RFC 8707) and are rejected by any other resource server.",
+    "token_revocation":             "Per-token revoke from /profile/agents; revocation is immediate (no cache).",
+    "data_retention":               "Time-block data is kept for the lifetime of the account. Audit events: 365 days. Tokens: until manually revoked or the account is deleted.",
+    "data_residency":               "United States (Heroku us-east).",
+    "compliance":                   [],
+    "incident_response_email":      "security@closedrings.sh"
+  },
+
+  "regional_availability": {
+    "regions": [ "global" ],
+    "languages": [ "en", "es" ]
+  },
+
+  "changelog_url": "https://github.com/samacs/closedrings-mcp/blob/main/CHANGELOG.md"
+}
