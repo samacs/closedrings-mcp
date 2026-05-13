@@ -4,6 +4,39 @@ All notable changes to `closedrings-mcp` will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-05-13
+
+### Changed — `docs/architecture.md` aligned with shipped OAuth
+
+The architecture doc said OAuth was "**not yet implemented**,
+tracked as Phase F" and dedicated a section to telling a future
+dev session what to build. OAuth has shipped on the main app
+([closedrings.sh#98](https://github.com/samacs/closedrings.sh/pull/98));
+this doc and the repo's README now tell the same story.
+
+- "Where the work actually happens" table: OAuth row points at
+  the merged PR with real file paths (`config/routes.rb`,
+  `app/controllers/oauth/`, the `OauthClient` /
+  `OauthAuthorization` models, `ApiToken` reuse with
+  `kind: agent`).
+- "What the dev session must verify against the spec" →
+  "How OAuth landed". Same numbered list rewritten as a tour of
+  what shipped, including the `POST /oauth/authorize/deny`
+  endpoint that wasn't in the original plan and the consent UI
+  under `app/views/oauth/authorizations/`.
+- Added RFC 8707 (Resource Indicators) to the spec references.
+  The `resource` parameter is explicitly implemented in
+  `app/controllers/well_known/oauth_protected_resource_controller.rb`
+  for audience binding.
+- Cross-references the Turbo-bypass follow-on fix
+  ([closedrings.sh#99](https://github.com/samacs/closedrings.sh/pull/99)).
+
+No code, manifest, or skill changes — `connector.json`, both
+plugin manifests, and every `SKILL.md` are byte-identical to
+v0.1.1. No marketplace re-submission required.
+
+---
+
 ## [0.1.1] — 2026-05-13
 
 ### Added — Claude Desktop submission assets
@@ -88,4 +121,6 @@ production deploy + screenshot captures land. Stored under
 
 | Plugin | Requires main app version             | MCP protocol revision |
 |--------|---------------------------------------|------------------------|
+| 0.1.2  | Build that includes Phase F (OAuth)   | 2025-06-18             |
+| 0.1.1  | Build that includes Phase F (OAuth)   | 2025-06-18             |
 | 0.1.0  | Build that includes Phase F (OAuth)   | 2025-06-18             |
