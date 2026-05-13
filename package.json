@@ -1,0 +1,35 @@
+{
+  "name": "closedrings-mcp",
+  "version": "0.0.0",
+  "description": "One-step setup for connecting MCP-capable AI agents to Closed Rings.",
+  "license": "MIT",
+  "homepage": "https://closedrings.sh/docs/mcp/overview",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samacs/closedrings-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/samacs/closedrings-mcp/issues"
+  },
+  "keywords": [
+    "closedrings",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "claude-desktop",
+    "claude-code",
+    "cursor",
+    "time-tracking",
+    "ai-agent"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist/",
+    "skill/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}
