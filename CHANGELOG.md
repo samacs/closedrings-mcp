@@ -4,6 +4,28 @@ All notable changes to `closedrings-mcp` will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-05-13
+
+### Added — Claude Desktop submission assets
+
+Fills the slots from the v0.1.0 `manifests/claude-desktop/assets/`
+README so the package is now actually submission-ready:
+
+- `wordmark.svg` — horizontal logo lockup
+- `screenshots/01-dashboard.png` — dashboard with active rings
+- `screenshots/02-claude-connect.png` — OAuth consent screen
+- `screenshots/03-claude-log.png` — agent calling `log_time_block`
+- `screenshots/04-audit-log.png` — OAuth audit trail row strip
+
+Also: `.gitignore` now drops `.DS_Store`; `assets/README.md`
+swaps the "still missing" checklist for a concise capture-refresh
+workflow.
+
+No code or manifest schema changes — `connector.json` and the
+plugin manifests are byte-identical to v0.1.0.
+
+---
+
 ## [0.1.0] — 2026-05-13
 
 First release. Two marketplace artifacts ship together:
