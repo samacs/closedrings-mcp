@@ -25,11 +25,41 @@ Approve. No token paste, no JSON editing.
 
 ## Status
 
-🚧 **Pre-release.** The marketplace artifacts here are gated on
-the server-side OAuth implementation landing in the main repo
-(tracked as Phase F of the MCP integration epic). Until then,
-follow the manual setup at
+🚧 **Pre-release** — server-side OAuth has landed
+([PR #98](https://github.com/samacs/closedrings.sh/pull/98));
+remaining gates for v0.1.0 are the production deploy and the
+Claude Desktop screenshot captures. Until then, follow the manual
+setup at
 [closedrings.sh/docs/mcp/overview](https://closedrings.sh/docs/mcp/overview).
+
+## Install in Claude Code
+
+This repo IS a Claude Code plugin marketplace — install with one
+command from a Claude Code session:
+
+```sh
+claude plugin marketplace add samacs/closedrings-mcp
+claude plugin install closedrings@closedrings
+```
+
+That registers the remote MCP server at `https://api.closedrings.sh/mcp`
+and the `closedrings:track-time` skill. Your first tool call kicks
+off the OAuth flow — Claude Code reads the `WWW-Authenticate`
+header on the 401, walks discovery, registers itself via DCR,
+opens the browser for consent, and exchanges the code for a token.
+
+Plugin layout follows Claude Code's conventions:
+
+```
+.claude-plugin/marketplace.json           ← marketplace catalog
+plugins/closedrings/
+├── .claude-plugin/plugin.json            ← plugin manifest (mcpServers + metadata)
+└── skills/closedrings-track-time/
+    └── SKILL.md                          ← auto-invoked when the user mentions time tracking
+```
+
+See [`manifests/claude-code/README.md`](manifests/claude-code/README.md)
+for the iteration workflow + verification commands.
 
 ## What this is *not*
 
