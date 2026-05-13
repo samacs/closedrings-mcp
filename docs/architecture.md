@@ -10,8 +10,8 @@ main Closed Rings Rails app.
 
 | Concern | Lives in |
 |---|---|
-| MCP transport (`POST /mcp`, JSON-RPC dispatcher, tool implementations, resources, rate limiting) | Main app (`closedrings.sh`, `Mcp::ServerController`) — already shipped through Phase A→E of the MCP integration epic. |
-| OAuth 2.0 authorization (DCR, PKCE, consent UI, token issuance) | Main app — **not yet implemented**, tracked as Phase F. |
+| MCP transport (`POST /mcp`, JSON-RPC dispatcher, tool implementations, resources, rate limiting) | Main app (`closedrings.sh`, `Mcp::ServerController`) — shipped through Phase A→E of the MCP integration epic. |
+| OAuth 2.1 authorization (DCR, PKCE, consent UI, token issuance) | Main app — shipped in [closedrings.sh#98](https://github.com/samacs/closedrings.sh/pull/98). Routes wired in `config/routes.rb`; controllers under `app/controllers/oauth/`; `OauthClient` / `OauthAuthorization` models persist DCR registrations and one-time codes; tokens reuse `ApiToken` with `kind: agent`. |
 | Audit log, agent-token `kind`, weekly digest, admin telemetry | Main app — already shipped through Phase A and E. |
 | Marketplace manifests for Claude Desktop's connector directory, Claude Code's plugin install, Cursor's MCP marketplace | **This repo.** |
 | The `closedrings:track-time` skill | Mirrored in both places: source of truth is the main app's `Mcp::Playbook::TEXT` (sent over the MCP `initialize` handshake); persistent copy is `skill/SKILL.md` in this repo (read by marketplace bundles + by users who paste into their client's rules). |
@@ -89,37 +89,46 @@ the provisioning path does.
   Sentry, PostHog, Linear, Atlassian, GitHub, Notion. Convergence
   on this pattern is the reason it's worth doing right.
 
-### What the dev session must verify against the spec
+### How OAuth landed
 
-I'm confident in the *shape* above, but specific endpoint paths
-and parameter names should be checked against the current
-spec — the auth section moved between revisions. Canonical source:
+The spec moved between MCP revisions while this work was in
+flight; the implementation tracks the **2025-06-18** profile
+that `Mcp::ServerController::PROTOCOL_VERSION` advertises.
+Reference docs the implementation conforms to:
 
 - MCP authorization spec: <https://modelcontextprotocol.io/specification>
-- OAuth 2.1: <https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/>
+- OAuth 2.1 draft: <https://datatracker.ietf.org/doc/draft-ietf-oauth-v2-1/>
 - RFC 7591 (Dynamic Client Registration)
 - RFC 7636 (PKCE)
+- RFC 8707 (Resource Indicators — for audience binding)
 
-The main repo's Phase F server work needs:
+What shipped in [closedrings.sh#98](https://github.com/samacs/closedrings.sh/pull/98):
 
-1. **Routes**:
-   - `GET /.well-known/oauth-protected-resource` (on the api host)
-   - `GET /.well-known/oauth-authorization-server` (on the apex)
-   - `POST /oauth/register`
-   - `GET /oauth/authorize` (consent UI)
-   - `POST /oauth/authorize` (form submission → redirect)
-   - `POST /oauth/token`
-2. **Models**: `OauthClient` (DCR-registered clients), `OauthGrant`
-   (one-time codes), `OauthToken` (could reuse `ApiToken` with a
-   `kind: agent` and an `oauth_client_id` FK).
-3. **Wiring** `Mcp::ServerController` to return the proper
-   `WWW-Authenticate` header on unauthenticated requests.
-4. **Consent UI** under the dashboard layout: "Claude Desktop is
-   asking to access your time blocks. Approve / Deny." with
-   per-client memory ("don't ask again for this client").
+1. **Routes** (`config/routes.rb`):
+   - `GET  /.well-known/oauth-protected-resource` (api host)
+   - `GET  /.well-known/oauth-authorization-server` (apex)
+   - `POST /oauth/register` — Dynamic Client Registration
+   - `GET  /oauth/authorize` — consent UI
+   - `POST /oauth/authorize` — approve form submission
+   - `POST /oauth/authorize/deny` — deny submission
+   - `POST /oauth/token` — PKCE exchange
+2. **Models**: `OauthClient` (DCR-registered clients) and
+   `OauthAuthorization` (one-time codes + PKCE verifiers). Access
+   tokens reuse `ApiToken` with `kind: agent` rather than a new
+   `OauthToken` model, so the existing `/profile/agents` UI and
+   audit-log machinery work for both paste-flow and OAuth-flow
+   tokens.
+3. **`Mcp::ServerController`** returns
+   `WWW-Authenticate: Bearer resource_metadata="…"` on
+   unauthenticated requests, pointing at the well-known endpoint.
+4. **Consent UI** lives under `app/views/oauth/authorizations/`
+   in the dashboard layout. Each client gets per-user approval
+   memory so "don't ask again for this client" works on the next
+   authorize attempt.
 
-That's ~2–4 days of focused work. The hardest part is the consent
-UI; the rest is mechanical.
+Follow-on fix: [closedrings.sh#99](https://github.com/samacs/closedrings.sh/pull/99)
+bypasses Turbo on the consent form so the cross-origin redirect
+back to the MCP client works in Hotwire-enabled layouts.
 
 ## What this repo holds
 
