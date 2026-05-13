@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "closedrings",
+  "description": "Connect Claude Code to Closed Rings — track time without leaving your terminal.",
+  "owner": {
+    "name": "Closed Rings",
+    "email": "saul@closedrings.sh"
+  },
+  "plugins": [
+    {
+      "name": "closedrings",
+      "source": "./plugins/closedrings",
+      "description": "Adds the Closed Rings remote MCP server + the closedrings:track-time skill to Claude Code. Lets the agent read your projects, start and stop time blocks, log past work, and answer end-of-day questions — all without context-switching out of chat.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Closed Rings",
+        "email": "saul@closedrings.sh"
+      },
+      "homepage": "https://closedrings.sh",
+      "repository": "https://github.com/samacs/closedrings-mcp",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [ "time-tracking", "productivity", "mcp", "agent-native", "developer-tools" ]
+    }
+  ]
+}

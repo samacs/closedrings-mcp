@@ -6,27 +6,32 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Direction (not yet released)
+### Added — 2026-05-13
 
-This repo holds marketplace artifacts — the skill, listing
-manifests, and branding assets — for connecting MCP-capable
-agents to Closed Rings. **No code; no npm publish.**
+- **Claude Code plugin marketplace.** This repo now IS a Claude
+  Code plugin marketplace; install with
+  `claude plugin marketplace add samacs/closedrings-mcp` then
+  `claude plugin install closedrings@closedrings`.
+  - `.claude-plugin/marketplace.json` — top-level catalog.
+  - `plugins/closedrings/.claude-plugin/plugin.json` — manifest
+    declaring the remote HTTP MCP server
+    (`https://api.closedrings.sh/mcp`).
+  - `plugins/closedrings/skills/closedrings-track-time/SKILL.md` —
+    auto-invoked playbook (frontmatter shaped for Claude Code's
+    skill loader, distinct from the docs-page-shaped
+    `skill/SKILL.md` at the repo root).
+  - `manifests/claude-code/README.md` — install + iteration
+    instructions, verification commands.
 
-The actual auth flow is implemented in the main app
-(`closedrings.sh`) as MCP-spec OAuth 2.0 + Dynamic Client
-Registration + PKCE. See `docs/architecture.md`.
+### Status of remaining v0.1.0 work
 
-### Planned for v0.1.0
-
-- `manifests/claude-desktop/connector.json` — for Claude Desktop's
-  connector directory submission.
-- `manifests/claude-code/plugin.json` + repo-rooted `SKILL.md` so
-  `claude plugin install github.com/samacs/closedrings-mcp` works.
-- `manifests/cursor/mcp.json` — for the Cursor MCP marketplace.
-- Branding assets (logo, screenshots) referenced by the
-  manifests.
-- Minimum main-app version: the version that lands MCP OAuth
-  endpoints (tracked as Phase F).
+- [ ] Claude Desktop submission package (in flight on
+  [`feature/claude-desktop-listing`](https://github.com/samacs/closedrings-mcp/pull/1))
+- [x] Claude Code plugin marketplace (this entry)
+- [ ] `manifests/cursor/` for the Cursor MCP marketplace
+- Minimum main-app version: the version that lands the Phase F
+  OAuth endpoints — currently `feature/mcp-oauth` in the main repo
+  ([PR #98](https://github.com/samacs/closedrings.sh/pull/98)).
 
 ### Planned for v0.2.0+
 
