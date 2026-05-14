@@ -4,6 +4,29 @@ All notable changes to `closedrings-mcp` will be documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed — Skill copy aligned with `create_task` + `git_context.sha`
+
+Paired with the main-app feature branch
+`feature/mcp-create-task-and-git-context` that adds `create_task`
+to the MCP surface and accepts `sha` on the `git_context` shape
+of every time-block write tool.
+
+- `skill/SKILL.md` (canonical) and
+  `plugins/closedrings/skills/closedrings-track-time/SKILL.md`
+  (plugin-marketplace copy) both gain a `create_task` row in the
+  write-tools table, a trigger-phrase entry ("File a ticket
+  for…"), and `git_context?` documented as an optional parameter
+  on `start_time_block` / `log_time_block` / `update_time_block`.
+- Behavioral rule 3 narrowed: "don't invent **projects**" — tasks
+  are now agent-creatable under existing projects via
+  `create_task`; projects remain dashboard-only.
+- `git_context` field shape gains `sha` alongside `branch`,
+  `repo`, `commits`, `range`. The CLI populates these
+  automatically; agents may pass them when their client knows
+  the repo state.
+
 ## [0.1.2] — 2026-05-13
 
 ### Changed — `docs/architecture.md` aligned with shipped OAuth
