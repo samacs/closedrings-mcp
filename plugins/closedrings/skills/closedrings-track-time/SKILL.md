@@ -34,11 +34,18 @@ in this session):
 
 | Tool | When to call |
 |---|---|
-| `start_time_block(project_slug, task_slug?, message?)` | "I'm about to work on X" / "starting X now". Auto-stops any running block. |
+| `create_task(project_slug, name, estimate?)` | The user describes a new piece of work that doesn't have a task yet ("file a ticket for the refund-flow refactor", "add a task: ship the SOC 2 deck"). Project must already exist; confirm name + project first. Chain into `start_time_block` with the new `task_slug` if they want to start tracking immediately. |
+| `start_time_block(project_slug, task_slug?, message?, git_context?)` | "I'm about to work on X" / "starting X now". Auto-stops any running block. |
 | `stop_time_block(message?)` | "I'm done" / "stop the timer" / "I just finished". Optional `message:` replaces the original note. |
-| `log_time_block(project_slug, task_slug?, started_at, ended_at, message?)` | Past work: "I worked from 2 to 4pm on X" / "I just spent 45 minutes on Y" / "this morning I did Z for an hour". Does not disturb anything running. |
-| `update_time_block(id, …)` | Fixing a wrong timestamp, refining a message, reassigning to a different task. Always get the `id` from `recent_time_blocks` first. |
+| `log_time_block(project_slug, task_slug?, started_at, ended_at, message?, git_context?)` | Past work: "I worked from 2 to 4pm on X" / "I just spent 45 minutes on Y" / "this morning I did Z for an hour". Does not disturb anything running. |
+| `update_time_block(id, …, git_context?)` | Fixing a wrong timestamp, refining a message, reassigning to a different task. Always get the `id` from `recent_time_blocks` first. |
 | `delete_time_block(id)` | The block shouldn't exist at all. For "I forgot to stop", use `update` instead. |
+
+`git_context` is an optional object (`{branch, repo, sha, commits, range}`)
+the CLI populates automatically. From an agent's perspective: if your
+client knows the repo state — say a Claude Code session running inside
+the project's git checkout — feel free to pass it on writes; otherwise
+leave it absent and the dashboard will fall back to the bare entry.
 
 ## Trigger-phrase patterns
 
@@ -57,6 +64,11 @@ hold.
 
 Write triggers — confirm first:
 
+- *"File a ticket for X"*, *"Add a task: ship Y"*, *"Create a task
+  for the auth refactor"*, *"Let's track this as a new task"* →
+  `create_task`. Confirm the project + name in one line; if the user
+  follows up with "and start tracking it", chain into
+  `start_time_block` with the returned `task_slug`.
 - *"Start tracking the refund flow"*, *"I'm starting on auth"*,
   *"Let's work on X"* → `start_time_block`
 - *"Stop the timer"*, *"I'm done"*, *"OK that's it"* →
@@ -95,13 +107,15 @@ directory or active editor folder ends in a name matching a project's
 asking. Otherwise call `list_projects` and propose the most likely
 match — don't dump the whole list at the user.
 
-**3. Don't invent projects or tasks.** Projects and tasks are
-curated by the user in the dashboard at
-[closedrings.sh](https://closedrings.sh). If the user mentions one
-that doesn't appear in `list_projects` / `list_tasks`, point them to
-the dashboard rather than creating it on the fly. The MCP transport
-deliberately does not expose `create_project` or `create_task` to
-keep this boundary clean.
+**3. Don't invent projects.** Projects are curated by the user in
+the dashboard at [closedrings.sh](https://closedrings.sh). If the
+user mentions one that doesn't appear in `list_projects`, point them
+to the dashboard rather than creating it on the fly — the MCP
+transport deliberately does not expose `create_project`. Tasks
+*under* an existing project can be created from the agent via
+`create_task` when the user dictates a new piece of work — confirm
+the project + name first and pass the returned `task_slug` into
+`start_time_block` if they want to start immediately.
 
 **4. Prefer `log_time_block` for past work.** *"I just spent an hour
 on X"* is past work — they're reporting after the fact. Don't
