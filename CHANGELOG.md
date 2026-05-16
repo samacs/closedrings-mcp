@@ -6,6 +6,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## 0.2.0 - 2026-04-16
+
 ### Changed — Skill copy aligned with task/project `description` field
 
 Paired with closedrings.sh#136 (the platform release that adds a
