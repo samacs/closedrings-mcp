@@ -6,6 +6,26 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed — Skill copy aligned with task/project `description` field
+
+Paired with closedrings.sh#136 (the platform release that adds a
+free-form `description` field to projects and tasks). The MCP tools
+themselves live in that repo and were updated alongside the feature;
+this bundle just updates the agent-facing playbook so the workflow
+stays consistent.
+
+- `skill/SKILL.md` (canonical) and
+  `plugins/closedrings/skills/closedrings-track-time/SKILL.md`
+  (plugin-marketplace copy) both gain a `description?` parameter on
+  the `create_task` row, with a nudge to capture acceptance criteria
+  / links / gotchas when the user dictates them alongside the task
+  name.
+- New behavioral rule **3a**: read descriptions returned by
+  `list_projects` and `list_tasks` before disambiguating an ambiguous
+  reference. The right context is often already in the payload.
+- Behavioral rule 3 ("don't invent projects") extended to reinforce
+  that `create_task` can carry a description on the way in.
+
 ### Changed — Skill copy aligned with `create_task` + `git_context.sha`
 
 Paired with the main-app feature branch
