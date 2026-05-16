@@ -9,7 +9,7 @@ popover_summary: |
   detect the project from your working directory, when to confirm
   before a write.
 related: [mcp/overview, mcp/claude-desktop, mcp/claude-code, mcp/cursor]
-last_reviewed: 2026-05-14
+last_reviewed: 2026-05-16
 ---
 
 # The closedrings:track-time skill
@@ -69,7 +69,7 @@ in this session):
 
 | Tool | When to call |
 |---|---|
-| `create_task(project_slug, name, estimate?)` | The user describes a new piece of work that doesn't have a task yet ("file a ticket for the refund-flow refactor", "add a task: ship the SOC 2 deck"). Project must already exist; confirm name + project first. Chain into `start_time_block` with the new `task_slug` if they want to start tracking immediately. |
+| `create_task(project_slug, name, description?, estimate?)` | The user describes a new piece of work that doesn't have a task yet ("file a ticket for the refund-flow refactor", "add a task: ship the SOC 2 deck"). Project must already exist; confirm name + project first. If the user mentions acceptance criteria, links, or gotchas in the same breath ("...and it needs to handle the 3DS retry case"), capture them in `description` — plain text, line breaks and emojis preserved, max 4000 chars. Chain into `start_time_block` with the new `task_slug` if they want to start tracking immediately. |
 | `start_time_block(project_slug, task_slug?, message?, git_context?)` | "I'm about to work on X" / "starting X now". Auto-stops any running block. |
 | `stop_time_block(message?)` | "I'm done" / "stop the timer" / "I just finished". Optional `message:` replaces the original note. |
 | `log_time_block(project_slug, task_slug?, started_at, ended_at, message?, git_context?)` | Past work: "I worked from 2 to 4pm on X" / "I just spent 45 minutes on Y" / "this morning I did Z for an hour". Does not disturb anything running. |
@@ -102,8 +102,10 @@ Write triggers — confirm first:
 - *"File a ticket for X"*, *"Add a task: ship Y"*, *"Create a task
   for the auth refactor"*, *"Let's track this as a new task"* →
   `create_task`. Confirm the project + name in one line; if the user
-  follows up with "and start tracking it", chain into
-  `start_time_block` with the returned `task_slug`.
+  also dictates acceptance criteria, links, or gotchas in the same
+  breath, pass them as `description` so they round-trip into the
+  dashboard. If the user follows up with "and start tracking it",
+  chain into `start_time_block` with the returned `task_slug`.
 - *"Start tracking the refund flow"*, *"I'm starting on auth"*,
   *"Let's work on X"* → `start_time_block`
 - *"Stop the timer"*, *"I'm done"*, *"OK that's it"* →
@@ -150,7 +152,16 @@ transport deliberately does not expose `create_project`. Tasks
 *under* an existing project can be created from the agent via
 `create_task` when the user dictates a new piece of work — confirm
 the project + name first and pass the returned `task_slug` into
-`start_time_block` if they want to start immediately.
+`start_time_block` if they want to start immediately. When the user
+mentions acceptance criteria, links, or gotchas alongside the new
+task, capture them in `description` (plain text — line breaks and
+emojis are preserved) so the dashboard surfaces them later.
+
+**3a. Read descriptions before guessing.** `list_projects` and
+`list_tasks` now return `description` per row. When the user gives an
+ambiguous reference ("the auth thing", "the refund work"), skim the
+descriptions before asking them to disambiguate — the right context
+is often already there.
 
 **4. Prefer `log_time_block` for past work.** *"I just spent an hour
 on X"* is past work — they're reporting after the fact. Don't
